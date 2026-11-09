@@ -4,6 +4,15 @@ class TranslateRequest(BaseModel):
     query: str
     source_lang: str
     dest_lang: str = "English"
-    words: list[str] = Field(default_factory=list, max_length=200)
+
+class TranslateWord(BaseModel):
+    id: int
+    chunk: str
+    meaning: str
+
+class TranslateRead(BaseModel):
+    id: int
+    translation: str
+    words: list[TranslateWord]
 
 

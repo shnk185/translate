@@ -1,5 +1,11 @@
 import json, requests, os
 
+from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import Session
+
+from models import Translation, Chunk, TranslationChunk
+
 MODEL = "gemma4:12b"
 OLLAMA_URL = "https://my.domain.net/ollama"
 
@@ -40,3 +46,34 @@ def parse(text):
             chunk, _, meaning = line[2:].strip().partition('|')
             words.append({"chunk": chunk.strip(), "meaning": meaning.strip()})
     return {"translation": t, "words": words}
+
+
+def translate_and_store(text, source_lang, dest_lang, db: Session):
+    response = translate(text, source_lang, dest_lang)
+    tr = Translation(
+        query=text,
+        translation=response["translation"],
+        source_lang=source_lang,
+        dest_lang=dest_lang
+    )
+    db.add(tr)
+    db.flush()
+    response["id"] = tr.id
+    for seq, word in enumerate(response["words"], start=1):
+        chunk = word["chunk"].strip()
+        if not chunk:
+            continue
+        stmt = insert(Chunk).values(text=chunk)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[Chunk.text],
+            set_={"times_used": Chunk.times_used + 1, "last_used": func.now()}
+        ).returning(Chunk.id)
+        chunk_id = db.execute(stmt).scalar_one()
+        word["id"] = chunk_id
+        db.add(TranslationChunk(
+            translation_id=tr.id,
+            chunk_id=chunk_id,
+            stored_meaning=word["meaning"],
+            sequence_number=seq
+        ))
+    return response
