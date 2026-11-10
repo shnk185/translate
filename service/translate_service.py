@@ -34,6 +34,7 @@ def translate(text, source_lang, dest_lang):
         raise OllamaError(r.text[:200])
     return parse(r.json()["message"]["content"].strip())
 
+
 def parse(text):
     t, words = None, []
     for line in text.splitlines():
