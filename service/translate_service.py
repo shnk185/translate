@@ -61,13 +61,7 @@ def parse(text):
 def translate_and_store(text, source_lang, dest_lang, preset_id, db: Session):
     prompt_list = get_preset_prompts(db, preset_id)
     response = translate(text, source_lang, dest_lang, prompt_list)
-    print(response)
-    tr = Translation(
-        query=text,
-        translation=response["translation"],
-        source_lang=source_lang,
-        dest_lang=dest_lang
-    )
+    tr = Translation(query=text, translation=response["translation"], source_lang=source_lang, dest_lang=dest_lang)
     db.add(tr)
     db.flush()
     response["id"] = tr.id
@@ -75,17 +69,14 @@ def translate_and_store(text, source_lang, dest_lang, preset_id, db: Session):
         chunk = word["chunk"].strip()
         if not chunk:
             continue
+
         stmt = insert(Chunk).values(text=chunk)
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[Chunk.text],
+        stmt = stmt.on_conflict_do_update(index_elements=[Chunk.text],
             set_={"times_used": Chunk.times_used + 1, "last_used": func.now()}
-        ).returning(Chunk.id)
-        chunk_id = db.execute(stmt).scalar_one()
+        ).returning(Chunk.id, Chunk.known)
+        chunk_id, known = db.execute(stmt).one()
         word["id"] = chunk_id
-        db.add(TranslationChunk(
-            translation_id=tr.id,
-            chunk_id=chunk_id,
-            stored_meaning=word["meaning"],
-            sequence_number=seq
-        ))
+        word["known"] = known
+        db.add(TranslationChunk(translation_id=tr.id, chunk_id=chunk_id, stored_meaning=word["meaning"],
+                                sequence_number=seq))
     return response

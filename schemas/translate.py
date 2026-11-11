@@ -10,6 +10,7 @@ class TranslateWord(BaseModel):
     id: int
     chunk: str
     meaning: str
+    known: bool
 
 class TranslateRead(BaseModel):
     id: int
