@@ -9,7 +9,7 @@ router = APIRouter()
 @router.post("/translate", response_model=TranslateRead)
 def translate(req: TranslateRequest, db: Session = Depends(get_db)):
     try:
-        result = translate_and_store(req.query,  req.source_lang, req.dest_lang, db)
+        result = translate_and_store(req.query,  req.source_lang, req.dest_lang, req.preset, db)
         db.commit()
         return result
     except OllamaError as exc:

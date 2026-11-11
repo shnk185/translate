@@ -4,6 +4,7 @@ class TranslateRequest(BaseModel):
     query: str
     source_lang: str
     dest_lang: str = "English"
+    preset: int
 
 class TranslateWord(BaseModel):
     id: int

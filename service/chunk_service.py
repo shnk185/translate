@@ -1,4 +1,4 @@
-from sqlalchemy import func, bindparam, update
+from sqlalchemy import bindparam, update
 from sqlalchemy.orm import Session
 
 from models import Chunk
