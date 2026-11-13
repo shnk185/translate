@@ -11,7 +11,7 @@ async def lifespan(app):
     Base.metadata.create_all(bind=engine)
     yield
 app = FastAPI()
-app.include_router(translate_router)
-app.include_router(prompt_router)
-app.include_router(chunks_router)
-app.include_router(preset_router)
+app.include_router(translate_router, prefix="/api")
+app.include_router(prompt_router, prefix="/api")
+app.include_router(chunks_router, prefix="/api")
+app.include_router(preset_router, prefix="/api")
