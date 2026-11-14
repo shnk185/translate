@@ -7,3 +7,10 @@ class PresetCreate(BaseModel):
 class PresetResponse(PresetCreate):
     id: int
     model_config = {"from_attributes": True}
+
+class FetchPreset(BaseModel):
+    id: int
+    name: str
+
+class FetchPresetsResponse(BaseModel):
+    presets: list[FetchPreset]
